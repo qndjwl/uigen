@@ -30,21 +30,32 @@ jobs:
         with:
           fetch-depth: 1
 
+      - name: Project Setup
+        run: |
+          npm run setup
+          npm run dev:daemon
+
       - name: Run Claude Code
         id: claude
         uses: anthropics/claude-code-action@v1
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
 
-          # This is an optional setting that allows Claude to read CI results on PRs
-          additional_permissions: |
-            actions: read
+          custom_instructions: |
+            The project is already set up with all dependencies installed. The server is already running at localhost: 3000. Logs from it are beign written to logs.txt. If needed, you can query the db with the "sqlite' cli. If needed, use the mop_playwright set of tools to launch a browser and interact with the app.
 
-          # Optional: Give a custom prompt to Claude. If this is not specified, Claude will perform the instructions specified in the comment that tagged it.
-          # prompt: 'Update the pull request description to include a summary of changes.'
-
-          # Optional: Add claude_args to customize behavior and configuration
-          # See https://github.com/anthropics/claude-code-action/blob/main/docs/usage.md
-          # or https://code.claude.com/docs/en/cli-reference for available options
-          # claude_args: '--allowed-tools Bash(gh pr *)'
+          mcp_config: |
+            {
+              "mcpServers": {
+                "playwright": {
+                  "command": "прх",
+                  "args": [
+                    "@playwright/mcp@latest",
+                    "--allowed-origins",
+                    "localhost: 3000; cdn.tailwindcss.com; esm.sh"
+                  ]
+                }
+              }
+            }
+          allowed_tools: "Bash (npm:*), Bash (sqlite3:*), mcp_playwright_browser_snapshot, mcp_playwright_browser_click, mcp_playwright_browser_fill, mcp_playwright_browser_goto, mcp_playwright_browser_screenshot, mcp_playwright_browser_wait_for_selector, mcp_playwright_browser_wait_for_navigation"
 
